@@ -1,0 +1,442 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>MENTOK — Manajemen Stok UMKM</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- Topbar -->
+  <header class="topbar">
+    <div class="brand">
+      <img class="logo" src="assets/logo-mentok.png" alt="MENTOK Logo" onerror="this.style.display='none'">
+      <div class="brandText">
+        <div class="brandName">MENTOK</div>
+        <div class="brandTag">Sistem Manajemen Stok untuk UMKM</div>
+      </div>
+    </div>
+
+    <div class="topActions" id="topActions" hidden>
+      <div class="userChip" id="userChip"></div>
+      <button class="btn btn-ghost" id="btnLogout">Logout</button>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- Auth -->
+    <section class="card auth" id="authCard">
+      <h1 class="h1">Masuk</h1>
+      <p class="muted">Masuk dengan akun demo.</p>
+
+      <div class="grid2">
+        <div class="field">
+          <label for="loginUsername">Username</label>
+          <input id="loginUsername" type="text" placeholder="contoh: owner" autocomplete="username" />
+        </div>
+        <div class="field">
+          <label for="loginPassword">Password</label>
+          <input id="loginPassword" type="password" placeholder="contoh: owner123" autocomplete="current-password" />
+        </div>
+      </div>
+
+      <div class="row">
+        <button class="btn btn-primary" id="btnLogin">Login</button>
+        <button class="btn btn-ghost" id="btnFillDemo">Isi akun demo</button>
+      </div>
+
+      <div class="note">
+        <div class="noteTitle">Akun Demo</div>
+        <ul class="noteList">
+          <li><b>Owner</b>: username <code>owner</code>, password <code>owner123</code></li>
+          <li><b>Karyawan</b>: username <code>karyawan</code>, password <code>karyawan123</code></li>
+        </ul>
+      </div>
+
+      <div class="alert" id="authAlert" hidden></div>
+    </section>
+
+    <!-- App -->
+    <section class="app" id="app" hidden>
+      <div class="layout">
+        <!-- Sidebar -->
+        <aside class="sidebar card">
+          <nav class="nav">
+            <button class="navItem active" data-tab="dashboard">Dashboard</button>
+            <button class="navItem" data-tab="barang">Data Barang</button>
+            <button class="navItem" data-tab="transaksi">Transaksi Stok</button>
+            <button class="navItem" data-tab="laporan">Laporan</button>
+            <button class="navItem" data-tab="pengaturan" id="navSettings">Pengaturan</button>
+          </nav>
+
+          <!-- <div class="sideHelp">
+            <div class="muted small">
+              Tips presentasi: tampilkan demo <b>CRUD</b>, lalu lakukan <b>stok keluar</b> sampai muncul <b>notifikasi stok menipis</b>.
+            </div>
+          </div> -->
+        </aside>
+
+        <!-- Content -->
+        <section class="content">
+          <!-- DASHBOARD -->
+          <section class="card tab" id="tab-dashboard">
+            <div class="tabHead">
+              <h2 class="h2">Dashboard</h2>
+              <div class="row">
+                <button class="btn btn-ghost" id="btnSeedExample">Isi contoh data</button>
+                <button class="btn btn-ghost" id="btnClearAll">Reset data</button>
+              </div>
+            </div>
+
+            <div class="kpis">
+              <div class="kpi">
+                <div class="kpiLabel">Total Barang</div>
+                <div class="kpiValue" id="kpiTotalBarang">0</div>
+              </div>
+              <div class="kpi">
+                <div class="kpiLabel">Total Stok</div>
+                <div class="kpiValue" id="kpiTotalStok">0</div>
+              </div>
+              <div class="kpi">
+                <div class="kpiLabel">Stok Menipis</div>
+                <div class="kpiValue danger" id="kpiLowStock">0</div>
+              </div>
+              <div class="kpi">
+                <div class="kpiLabel">Transaksi Hari Ini</div>
+                <div class="kpiValue" id="kpiTxToday">0</div>
+              </div>
+            </div>
+
+            <div class="sectionTitle">Peringatan Stok Menipis</div>
+            <div id="lowStockList" class="empty">Belum ada barang yang stoknya menipis.</div>
+
+            <div class="sectionTitle">Barang Terbaru</div>
+            <div class="tableWrap">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Kode</th>
+                    <th>Nama</th>
+                    <th>Kategori</th>
+                    <th class="right">Stok</th>
+                    <th class="right">Min</th>
+                  </tr>
+                </thead>
+                <tbody id="recentItemsBody"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <!-- BARANG -->
+          <section class="card tab" id="tab-barang" hidden>
+            <div class="tabHead">
+              <h2 class="h2">Data Barang</h2>
+              <button class="btn btn-primary" id="btnOpenAddItem">+ Tambah Barang</button>
+            </div>
+
+            <div class="filters">
+              <div class="field">
+                <label>Cari</label>
+                <input id="searchItem" type="text" placeholder="nama / kode / kategori..." />
+              </div>
+              <div class="field">
+                <label>Filter kategori</label>
+                <select id="filterCategory">
+                  <option value="">Semua</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>Urutkan</label>
+                <select id="sortItem">
+                  <option value="createdDesc">Terbaru</option>
+                  <option value="nameAsc">Nama (A-Z)</option>
+                  <option value="stockAsc">Stok (kecil→besar)</option>
+                  <option value="stockDesc">Stok (besar→kecil)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="tableWrap">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Kode</th>
+                    <th>Nama</th>
+                    <th>Kategori</th>
+                    <th class="right">Stok</th>
+                    <th class="right">Min</th>
+                    <th>Status</th>
+                    <th class="right">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="itemsBody"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <!-- TRANSAKSI -->
+          <section class="card tab" id="tab-transaksi" hidden>
+            <div class="tabHead">
+              <h2 class="h2">Transaksi Stok</h2>
+              <div class="row">
+                <button class="btn btn-primary" id="btnOpenTx">+ Buat Transaksi</button>
+              </div>
+            </div>
+
+            <div class="filters">
+              <div class="field">
+                <label>Jenis</label>
+                <select id="filterTxType">
+                  <option value="">Semua</option>
+                  <option value="IN">Stok Masuk</option>
+                  <option value="OUT">Stok Keluar</option>
+                  <option value="ADJ">Penyesuaian</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>Rentang</label>
+                <select id="filterTxRange">
+                  <option value="7">7 hari terakhir</option>
+                  <option value="30">30 hari terakhir</option>
+                  <option value="365">1 tahun terakhir</option>
+                  <option value="0">Semua</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>Cari</label>
+                <input id="searchTx" type="text" placeholder="kode / nama / catatan..." />
+              </div>
+            </div>
+
+            <div class="tableWrap">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Waktu</th>
+                    <th>Jenis</th>
+                    <th>Barang</th>
+                    <th class="right">Jumlah</th>
+                    <th>Catatan</th>
+                    <th>User</th>
+                  </tr>
+                </thead>
+                <tbody id="txBody"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <!-- LAPORAN -->
+          <section class="card tab" id="tab-laporan" hidden>
+            <div class="tabHead">
+              <h2 class="h2">Laporan</h2>
+              <div class="row">
+                <button class="btn btn-ghost" id="btnExportCSV">Export CSV</button>
+              </div>
+            </div>
+
+            <div class="kpis">
+              <div class="kpi">
+                <div class="kpiLabel">Total IN (7 hari)</div>
+                <div class="kpiValue" id="reportIn7">0</div>
+              </div>
+              <div class="kpi">
+                <div class="kpiLabel">Total OUT (7 hari)</div>
+                <div class="kpiValue" id="reportOut7">0</div>
+              </div>
+              <div class="kpi">
+                <div class="kpiLabel">Transaksi (7 hari)</div>
+                <div class="kpiValue" id="reportTx7">0</div>
+              </div>
+              <div class="kpi">
+                <div class="kpiLabel">Stok Menipis</div>
+                <div class="kpiValue danger" id="reportLow">0</div>
+              </div>
+            </div>
+
+            <div class="sectionTitle">Ringkasan Harian (7 hari terakhir)</div>
+            <div class="tableWrap">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Tanggal</th>
+                    <th class="right">IN</th>
+                    <th class="right">OUT</th>
+                    <th class="right">ADJ</th>
+                    <th class="right">Total Tx</th>
+                  </tr>
+                </thead>
+                <tbody id="dailyReportBody"></tbody>
+              </table>
+            </div>
+
+            <div class="sectionTitle">Ringkasan Mingguan (8 minggu terakhir)</div>
+            <div class="tableWrap">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Minggu</th>
+                    <th class="right">IN</th>
+                    <th class="right">OUT</th>
+                    <th class="right">ADJ</th>
+                    <th class="right">Total Tx</th>
+                  </tr>
+                </thead>
+                <tbody id="weeklyReportBody"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <!-- PENGATURAN -->
+          <section class="card tab" id="tab-pengaturan" hidden>
+            <div class="tabHead">
+              <h2 class="h2">Pengaturan</h2>
+            </div>
+
+            <div class="note">
+              <div class="noteTitle">Manajemen User</div>
+              <div class="muted small">
+                Owner dapat menambah user baru.
+              </div>
+            </div>
+
+            <div class="grid2">
+              <div class="field">
+                <label>Username baru</label>
+                <input id="newUserUsername" type="text" placeholder="misal: kasir1" />
+              </div>
+              <div class="field">
+                <label>Password baru</label>
+                <input id="newUserPassword" type="password" placeholder="minimal 6 karakter" />
+              </div>
+              <div class="field">
+                <label>Role</label>
+                <select id="newUserRole">
+                  <option value="OWNER">OWNER</option>
+                  <option value="STAFF">STAFF</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>&nbsp;</label>
+                <button class="btn btn-primary" id="btnAddUser">Tambah User</button>
+              </div>
+            </div>
+
+            <div class="sectionTitle">Daftar User</div>
+            <div class="tableWrap">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Username</th>
+                    <th>Role</th>
+                    <th class="right">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="usersBody"></tbody>
+              </table>
+            </div>
+
+            <div class="alert" id="settingsAlert" hidden></div>
+          </section>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <!-- MODAL: Add/Edit Item -->
+  <div class="modal" id="modalItem" hidden>
+    <div class="modalBackdrop" data-close="1"></div>
+    <div class="modalCard">
+      <div class="modalHead">
+        <div class="h2" id="modalItemTitle">Tambah Barang</div>
+        <button class="iconBtn" data-close="1" aria-label="Tutup">✕</button>
+      </div>
+
+      <div class="grid2">
+        <div class="field">
+          <label for="itemCode">Kode Barang</label>
+          <input id="itemCode" type="text" placeholder="misal: BRG001" />
+        </div>
+        <div class="field">
+          <label for="itemName">Nama Barang</label>
+          <input id="itemName" type="text" placeholder="misal: Gula 1kg" />
+        </div>
+        <div class="field">
+          <label for="itemCategory">Kategori</label>
+          <input id="itemCategory" type="text" placeholder="misal: Sembako" />
+        </div>
+        <div class="field">
+          <label for="itemStock">Stok Awal</label>
+          <input id="itemStock" type="number" min="0" step="1" value="0" />
+        </div>
+        <div class="field">
+          <label for="itemMin">Batas Minimum</label>
+          <input id="itemMin" type="number" min="0" step="1" value="5" />
+        </div>
+        <div class="field">
+          <label for="itemUnit">Satuan</label>
+          <input id="itemUnit" type="text" placeholder="pcs/kg/liter" value="pcs" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="itemNote">Catatan</label>
+        <textarea id="itemNote" rows="3" placeholder="opsional..."></textarea>
+      </div>
+
+      <div class="row right">
+        <button class="btn btn-ghost" data-close="1">Batal</button>
+        <button class="btn btn-primary" id="btnSaveItem">Simpan</button>
+      </div>
+
+      <div class="alert" id="itemAlert" hidden></div>
+    </div>
+  </div>
+
+  <!-- MODAL: Transaction -->
+  <div class="modal" id="modalTx" hidden>
+    <div class="modalBackdrop" data-close="1"></div>
+    <div class="modalCard">
+      <div class="modalHead">
+        <div class="h2">Buat Transaksi Stok</div>
+        <button class="iconBtn" data-close="1" aria-label="Tutup">✕</button>
+      </div>
+
+      <div class="grid2">
+        <div class="field">
+          <label>Jenis</label>
+          <select id="txType">
+            <option value="IN">Stok Masuk</option>
+            <option value="OUT">Stok Keluar</option>
+            <option value="ADJ">Penyesuaian</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Barang</label>
+          <select id="txItem"></select>
+        </div>
+        <div class="field">
+          <label>Jumlah</label>
+          <input id="txQty" type="number" min="1" step="1" value="1" />
+        </div>
+        <div class="field">
+          <label>Catatan</label>
+          <input id="txNote" type="text" placeholder="opsional..." />
+        </div>
+      </div>
+
+      <div class="row right">
+        <button class="btn btn-ghost" data-close="1">Batal</button>
+        <button class="btn btn-primary" id="btnSaveTx">Simpan Transaksi</button>
+      </div>
+
+      <div class="alert" id="txAlert" hidden></div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="muted small">MENTOK • Sistem manajemen stok barang.</div>
+  </footer>
+
+  <script src="scripts.js"></script>
+</body>
+</html>
